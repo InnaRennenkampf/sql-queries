@@ -1,0 +1,94 @@
+; https://www.w3schools.com/sql/trysql.asp?filename=trysql_select_where
+
+; Выбрать все номера заказов и продукты в них, где количество больше 20 и CategoryName 'Produce'
+
+SELECT Orders.OrderID, Products.ProductName
+FROM ((Orders 
+INNER JOIN OrderDetails ON Orders.OrderID = OrderDetails.OrderID) 
+INNER JOIN Products ON OrderDetails.ProductID = Products.ProductID)
+INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID 
+WHERE OrderDetails.Quantity > 20 AND Categories.CategoryName = 'Produce'
+
+; У нас есть две таблицы: Shippers и Suppliers, необходимо сделать общий справочник состоящий из двух колонок (имя таблицы с которой взята запись, название ShipperName или SupplierName
+
+SELECT 'Shippers' AS TableName, ShipperName FROM Shippers ///создаем столбец TableName и передаем туда строку, с названием, которое соответствует названию таблице
+UNION ALL
+SELECT 'Suppliers' AS TableName, SupplierName FROM Suppliers
+
+; Выбрать все коды клиентов - CustomerID, сделавших заказ в 1996 году, но не сделавших в 1997 году
+
+SELECT DISTINCT CustomerID
+FROM Orders
+WHERE YEAR(OrderDate) = 1996
+AND CustomerID NOT IN (
+    SELECT CustomerID
+    FROM Orders
+    WHERE YEAR(OrderDate) = 1997
+)
+
+; Для каждого заказа посчитать его итоговую стоимость
+
+SELECT Orders.OrderID, SUM(Products.Price * OrderDetails.Quantity) AS TotalPrice
+FROM (Orders
+INNER JOIN OrderDetails ON Orders.OrderID = OrderDetails.OrderID)
+INNER JOIN Products ON OrderDetails.ProductID = Products.ProductID
+GROUP BY Orders.OrderID
+
+; Вывести поставщика (SupplierName), сумма чьих товаров самая дорогая
+
+SELECT TOP 1 Suppliers.SupplierName, SUM(Products.Price) AS TotalPrice
+FROM Suppliers
+INNER JOIN Products ON Suppliers.SupplierID = Products.SupplierID
+GROUP BY Suppliers.SupplierName
+ORDER BY SUM(Products.Price) DESC
+
+; Вывести всю информацию о сотрудниках, у которых нет ни одного заказа
+
+SELECT Employees.EmployeeID, LastName, FirstName, BirthDate, Photo, Notes
+FROM Employees
+LEFT JOIN Orders
+ON Employees.EmployeeID = Orders.EmployeeID
+WHERE Orders.EmployeeID IS NULL
+
+; Вывести наименования продуктов с кодами 1, 3, 7, 9 и ценой уменьшенной на 50%.
+
+SELECT ProductID, ProductName, ROUND(Price * 0.5, 2) as Price
+FROM Products
+WHERE ProductID IN (1, 3, 7, 9)
+
+; Вывести номера заказов в диапазоне от 10253 до 10260
+
+SELECT * 
+FROM Orders
+WHERE OrderID < 10260 
+AND OrderID > 10253
+
+; Вывести все продукты, у которых код продукта >= 64 или продукты, у которых поставщик = "Tokyo Traders"
+
+SELECT *
+FROM Products
+WHERE ProductID >= 64 OR SupplierID = (
+  SELECT SupplierID
+  FROM Suppliers
+  WHERE SupplierName = 'Tokyo Traders'
+)
+
+; Вывести закрепления сотрудника за заказами в виде: OrderID, LastName, FirstName
+
+SELECT OrderID, LastName, FirstName
+FROM Orders
+INNER JOIN Employees
+ON Orders.EmployeeID = Employees.EmployeeID
+
+; Вывести информацию о продуктах, название которых начинается с "Chef"
+
+SELECT * 
+FROM Products
+WHERE ProductName LIKE "Chef%"
+
+; Вывести отчёт в виде: номер заказа, количество товара в заказе, название товара
+
+SELECT OrderID, Quantity, ProductName
+FROM OrderDetails
+INNER JOIN Products
+ON OrderDetails.ProductID = Products.ProductID
